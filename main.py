@@ -19,6 +19,8 @@ def main():
     term = ""
     year = -1
     subject = ""
+    cunyfirstlogin = ""
+    cunyfirstpassword = ""
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--classnum", help="class number", type=int)
@@ -35,6 +37,11 @@ def main():
     parser.add_argument("--visible",
                         help="Makes the browser visible",
                         action="store_true")
+    parser.add_argument("--cunyid", help="Cuny ID", type=str)
+    parser.add_argument("--password",
+                        help="password for Cunyfirst username",
+                        type=str)
+    
     args = parser.parse_args()
     if args.classnum:
         print("Class " + str(args.classnum) + " selected")
@@ -51,6 +58,13 @@ def main():
     if args.subject:
         print("Subject " + args.subject + " selected")
         subject = args.subject
+    if args.cunyfirstlogin:
+      print("Cunyfirst username " + args.cunyfirstlogin + " selected")
+      cunyfirstlogin = args.cunyfirstlogin
+
+    if args.cunyfirstpassword:
+      print("Cunyfirst password " + str(cunyfirstpassword) + " selected")
+      cunyfirstpassword = cunyidpassword
 
     if not args.institution:
         institution = institutionmenu()
@@ -71,6 +85,14 @@ def main():
     if not args.classnum:
         classnum = classmenu()
         print("Class " + str(classnum) + " selected")
+    
+    if not args.cunyfirstlogin:
+        cunyfirstlogin = cunyidmenu()
+        print("Cunyfirst username " + str(cunyfirstlogin) + " selected")
+    
+    if not args.cunyfirstpassword:
+        cunyfirstpassword = cunyidpassword
+        print("Cunyfirst password " + str(cunyfirstpassword) + " selected")
 
     # print all vars and ask the user is this correct? if not we ask again, if yes then we run
     flag = False
@@ -107,21 +129,59 @@ def main():
         classstatus = driver.find_element_by_id(
             'SSR_CLS_DTL_WRK_SSR_DESCRSHORT').get_attribute('innerHTML')
         if classstatus == "Open":
-            flag = True
-            for x in range(10):
-                playsound('sound.mp3')
-                time.sleep(1)
-        print(classstatus)
-
+#             
+#           This code will be used once a class has been found open and log into cunyfirst
+#           using the cunyfirst login credentials
+#           
+# 
+#             
+            # flag = True
+            # for x in range(10):
+            #     playsound('sound.mp3')
+            #     time.sleep(1)
+        # print(classstatus)
+          break #temporary break
+def SignUp(driver, term, classnum):
+    email = cunyidmenu()
+    password = cunyidpassword()
+    driver.get("https://cunyfirst.cuny.edu")
+    Usernameinput = driver.find_element_by_id("CUNYfirstUsernameH")
+    Usernameinput.clear()
+    Usernameinput.send_keys(email)
+    PasswordInput = driver.find_element_by_id("CUNYfirstPassword")
+    PasswordInput.send_keys(password)
+    driver.find_element_by_id("submit").click()
+    time.sleep(3)
+    ElementList = driver.find_elements_by_tag_name("tr")
+    print(len(ElementList))
+    SCElement = driver.find_element_by_id("crefli_HC_SSS_STUDENT_CENTER")
+    SCElement.find_element_by_tag_name("a").click()
+    time.sleep(3)
+    frame = driver.find_element_by_tag_name("iframe")
+    driver.switch_to.frame(frame)
+    EnrElement = driver.find_element_by_xpath("//*[contains(text(),'Enroll')]").click()
+    #get the element id which contains Semester
+    time.sleep(3)
+    ID = driver.find_element_by_xpath("//*[contains(text(),'" + term + "')]").get_attribute("id")[-1]
+    print(ID)
+    #combine the id with the expected Radio Button id
+    RadioID = "SSR_DUMMY_RECV1$sels$" + ID + "$$0"
+    #search for element with RadioID
+    driver.find_element_by_id(RadioID).click()
+    driver.find_element_by_id("DERIVED_SSS_SCT_SSR_PB_GO").click()
+    time.sleep(3)
+    classbox = driver.find_element_by_id("DERIVED_REGFRM1_CLASS_NBR")
+    classbox.send_keys(classnumber)
+    driver.find_element_by_id("DERIVED_REGFRM1_SSR_PB_ADDTOLIST2$9$").click()
+    time.sleep(1)
+    driver.find_element_by_id("DERIVED_CLS_DTL_NEXT_PB$280$").click()
 
 def yearmenu():
-    return input("Enter a year: ")  # i dont want to handle non int so i wont
+    return input("Enter a year: ")
 
 
 def classmenu():
-    return input(
-        "Enter a 5 digit class number: ")  # i dont want to handle non int so i wont
-
+    return input("Enter a 5 digit class number: ")
 
 def termmenu():
     choice = '0'
@@ -182,5 +242,12 @@ def institutionmenu():
         else:
             print("I don't understand your choice.")
 
+
+def cunyidmenu():
+  return input("Please enter your Cunyfirst username ")
+
+
+def cunyidpassword():
+  return input("Please enter your Cunyfirst password ")
 
 main()
